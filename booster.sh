@@ -16,11 +16,11 @@ Help() {
     echo
 }
 
-channel=$1
 if [[ -z $1 ]]; then
 	Help
 	exit 0
 fi
+channel=$1
 
 json=$(curl https://api.boosty.to/v1/blog/$channel/media_album/\?type\=all\&limit_by\=media | jq -r '.data.mediaPosts')
 
@@ -43,5 +43,10 @@ while true; do
 	fi
 	((i++))
 done
+
+if [[ $str == "" ]]; then
+	echo "Nothing to show"
+	exit 0
+fi
 
 echo -e "$str" | column --table --separator ";" | fzf --bind 'enter:become(mpv {1})+abort'
