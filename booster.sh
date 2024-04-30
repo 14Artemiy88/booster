@@ -49,4 +49,5 @@ if [[ $str == "" ]]; then
 	exit 0
 fi
 
-echo -e "$str" | column --table --separator ";" | fzf --bind 'enter:become(mpv {1})+abort'
+str="  URL;Free; Title\n$str"
+echo -e "$str" | column --table --separator ";" | fzf --header '' --header-lines=1 --bind 'enter:become(mpv {1})+abort'
