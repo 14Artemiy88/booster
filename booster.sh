@@ -3,6 +3,9 @@
 declare -r NORMAL_COLOR="\e[0;39m"
 declare -r GREEN_COLOR="\e[0;32m"
 declare -r YELLOW_COLOR="\e[0;33m"
+declare -r BLUE_COLOR="\e[1;36m"
+declare -r RED_COLOR="\e[1;31m"
+declare -r GRAY_COLOR="\e[38;5;254m"
 
 Help() {
     # Display Help
@@ -34,12 +37,11 @@ while true; do
 	fi
 	if [[ $vid -ne null ]]; then
 		hasAccess=$(jq ".[$i].post.hasAccess" <<< $json)
-		access="󰅖"
+		access="${RED_COLOR} 󰅖${NORMAL_COLOR}"
 		if [[ "$hasAccess" == true ]]; then
-			# access="󰄬"
-			access=" "
+			access="${GREEN_COLOR} 󰄬${NORMAL_COLOR}"
 		fi
-		str="$str\n https://ok.ru/videoembed/$vid;$access;$title"
+		str="$str\n ${GRAY_COLOR}https://ok.ru/videoembed/$vid${NORMAL_COLOR}|$access|${BLUE_COLOR}$title${NORMAL_COLOR}"
 	fi
 	((i++))
 done
@@ -49,5 +51,5 @@ if [[ $str == "" ]]; then
 	exit 0
 fi
 
-str="  URL;Free; Title\n$str"
-echo -e "$str" | column --table --separator ";" | fzf --header '' --header-lines=1 --bind 'enter:become(mpv {1})+abort'
+str="  ${YELLOW_COLOR}URL|Free| Title${NORMAL_COLOR}\n$str"
+echo -e "$str" | column --table --separator "|" | fzf --ansi  --header '  CTRL-V Only 󰄬 / CTRL-X Only 󰅖 / CTRL-A All' --header-lines=1 --bind 'enter:become(mpv {1})+abort' --bind "ctrl-v:+transform-query(echo '󰄬 ')" --bind "ctrl-x:+transform-query(echo '󰅖 ')" --bind "ctrl-a:+transform-query(echo )"
