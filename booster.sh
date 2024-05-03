@@ -88,7 +88,7 @@ str=" ${YELLOW_COLOR}Free| Title| Id${NORMAL_COLOR}\n"
 IMAGE_VIEWER="chafa --size=60%"
 params "${@}"
 
-refbar_size=$(( $(tput cols) - 25 ))
+bar_size=$(( $(tput cols) - 25 ))
 fzf_params=(
     "--ansi"
     --header ' CTRL-V Only 󰄬 / CTRL-X Only 󰅖 / CTRL-A All'
