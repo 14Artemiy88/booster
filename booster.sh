@@ -34,7 +34,6 @@ params() {
     fi
     if [ "$#" -gt 1 ]; then
         if [[ "$2" == "--no-image" ]]; then
-            str=" ${YELLOW_COLOR}Free| Title\n"
             SHOW_IMAGE=false
         elif [[ "$2" == "-v" && -n "$3" ]]; then
             IMAGE_VIEWER="$3"
@@ -60,37 +59,28 @@ load() {
 }
 
 function get_channels() {
-    readonly json=$(curl https://api.boosty.to/v1/blog/$1/media_album/\?type\=all\&limit_by\=media | jq -r '.data.mediaPosts')
     local -i i=0
-    local title vid hasAccess access preview
-    while true; do
-    	title=$(jq -r ".[$i].post.title" <<< "$json")
+    local image_list=()
+    readonly json=$(curl -s https://api.boosty.to/v1/blog/$1/media_album/\?type\=all\&limit_by\=media | jq -r '.data.mediaPosts[] | [.post.title, .media[0]?.vid, .post.hasAccess, .media[0]?.preview, .post.teaser[0].url] | @tsv')
+    while IFS=$'\t' read -r title vid hasAccess preview _; do
     	if [[ $title == null ]]; then
     		break
     	fi
-    	vid=$(jq -r ".[$i].media[0].vid" <<< "$json")
-    	if [[ $vid != "null" ]]; then
-    		hasAccess=$(jq -r ".[$i].post.hasAccess" <<< "$json")
+    	if [[ "$vid" != false && "$vid" != true ]]; then
     		access="${RED_COLOR}󰅖${NORMAL_COLOR}"
-    		if [[ $hasAccess == true ]]; then
+    		if [ "$hasAccess" = true ]; then
     			access="${GREEN_COLOR}󰄬${NORMAL_COLOR}"
-    			preview=$(jq -r ".[$i].media[0].preview" <<< "$json")
-    		else
-    			preview=$(jq -r ".[$i].post.teaser[0].url" <<< "$json")
     		fi
     		str="$str\n $access|${BLUE_COLOR}$title${NORMAL_COLOR}"
+            image_list+=("$preview")
             if [ $SHOW_IMAGE = true ]; then
     		    load "$preview" "$title"
-                fzf_params+=(--preview-window 'nohidden,right,40%,border-left')
-                fzf_params+=(--preview "$IMAGE_VIEWER $IMG_PATH/{-1}")
-    		    str="$str|${GRAY_COLOR}$vid${NORMAL_COLOR}"
-            else
-                fzf_params+=(--preview-window hidden)
             fi
+            str="$str|${GRAY_COLOR}$vid${NORMAL_COLOR}"
             empty=false
     	fi
     	((i++))
-    done
+    done  <<< "$json"
 }
 
 SHOW_IMAGE=true
@@ -98,7 +88,7 @@ str=" ${YELLOW_COLOR}Free| Title| Id${NORMAL_COLOR}\n"
 IMAGE_VIEWER="chafa --size=60%"
 params "${@}"
 
-bar_size=$(( $(tput cols) - 25 ))
+refbar_size=$(( $(tput cols) - 25 ))
 fzf_params=(
     "--ansi"
     --header ' CTRL-V Only 󰄬 / CTRL-X Only 󰅖 / CTRL-A All'
@@ -109,6 +99,13 @@ fzf_params=(
     --bind "ctrl-a:+transform-query(echo )"
     --bind "esc:+abort"
 )
+if [ $SHOW_IMAGE = true ]; then
+    fzf_params+=(--preview-window 'nohidden,right,40%,border-left')
+    fzf_params+=(--preview "$IMAGE_VIEWER $IMG_PATH/{-1}")
+else
+    fzf_params+=(--preview-window hidden)
+fi
+
 empty=true
 get_channels "$1"
 
