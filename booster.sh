@@ -52,7 +52,7 @@ show_help_and_exit() {
 load() {
 	if [[ ! -f "$IMG_PATH/$vid" ]]; then
 		local len=$((bar_size - ${#title}))
-    	readonly v=$(printf "%-${len}s" " ")
+    	local v=$(printf "%-${len}s" " ")
     	echo -e '\e[2F\n'
     	echo -en "Loading image...\t${GREEN_COLOR}$2${NORMAL_COLOR}${v// / }"
 		curl -s -o "$IMG_PATH/$vid" "$1" >/dev/null
@@ -87,6 +87,7 @@ function get_channels() {
             else
                 fzf_params+=(--preview-window hidden)
             fi
+            empty=false
     	fi
     	((i++))
     done
@@ -108,11 +109,11 @@ fzf_params=(
     --bind "ctrl-a:+transform-query(echo )"
     --bind "esc:+abort"
 )
-
+empty=true
 get_channels "$1"
 
-if [[ $str == "" ]]; then
-	echo "Nothing to show"
+if [ $empty = true ]; then
+	echo -e "${YELLOW_COLOR}Nothing to show${NORMAL_COLOR}"
 	exit 0
 fi
 
