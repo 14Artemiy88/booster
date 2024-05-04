@@ -48,10 +48,17 @@ show_help_and_exit() {
     exit 0
 }
 
+Nothing_to_show() {
+    echo -e "${YELLOW_COLOR}Nothing to show${NORMAL_COLOR}"
+    exit 0
+}
+
+
 load() {
 	if [[ ! -f "$IMG_PATH/$vid" ]]; then
 		local len=$((bar_size - ${#title}))
-    	local v=$(printf "%-${len}s" " ")
+		local v
+    	v=$(printf "%-${len}s" " ")
     	echo -e '\e[2F\n'
     	echo -en "Loading image...\t${GREEN_COLOR}$2${NORMAL_COLOR}${v// / }"
 		curl -s -o "$IMG_PATH/$vid" "$1" >/dev/null
@@ -60,19 +67,18 @@ load() {
 
 function get_channels() {
     local -i i=0
-    local image_list=()
     readonly json=$(curl -s https://api.boosty.to/v1/blog/$1/media_album/\?type\=all\&limit_by\=media | jq -r '.data.mediaPosts[] | [.post.title, .media[0]?.vid, .post.hasAccess, .media[0]?.preview, .post.teaser[0].url] | @tsv')
+    if [[ $json == "" ]]; then
+        Nothing_to_show
+    fi
+
     while IFS=$'\t' read -r title vid hasAccess preview _; do
-    	if [[ $title == null ]]; then
-    		break
-    	fi
     	if [[ "$vid" != false && "$vid" != true ]]; then
     		access="${RED_COLOR}󰅖${NORMAL_COLOR}"
     		if [ "$hasAccess" = true ]; then
     			access="${GREEN_COLOR}󰄬${NORMAL_COLOR}"
     		fi
     		str="$str\n $access|${BLUE_COLOR}$title${NORMAL_COLOR}"
-            image_list+=("$preview")
             if [ $SHOW_IMAGE = true ]; then
     		    load "$preview" "$title"
             fi
@@ -84,11 +90,11 @@ function get_channels() {
 }
 
 SHOW_IMAGE=true
-str=" ${YELLOW_COLOR}Free| Title| Id${NORMAL_COLOR}\n"
 IMAGE_VIEWER="chafa --size=60%"
 params "${@}"
 
-bar_size=$(( $(tput cols) - 25 ))
+readonly bar_size=$(( $(tput cols) - 25 ))
+str=" ${YELLOW_COLOR}Free| Title| Id${NORMAL_COLOR}\n"
 fzf_params=(
     "--ansi"
     --header ' CTRL-V Only 󰄬 / CTRL-X Only 󰅖 / CTRL-A All'
@@ -110,8 +116,7 @@ empty=true
 get_channels "$1"
 
 if [ $empty = true ]; then
-	echo -e "${YELLOW_COLOR}Nothing to show${NORMAL_COLOR}"
-	exit 0
+    Nothing_to_show
 fi
 
 echo -e "$str" | column --table --separator "|" | fzf "${fzf_params[@]}"
