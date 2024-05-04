@@ -17,34 +17,19 @@ if [ ! -d "$IMG_PATH" ]; then
 fi
 
 Help() {
-    # Display Help
     echo "Get video from Boosty by channel name."
     echo
     echo -e "${YELLOW_COLOR}USAGE${NORMAL_COLOR}
     booster CHANNEL [OPTIONS]"
     echo
     echo -e "${YELLOW_COLOR}ARGS${NORMAL_COLOR}
-    ${GREEN_COLOR}<CHANNEL>${NORMAL_COLOR}    Channel name"
+    ${GREEN_COLOR}<CHANNEL>${NORMAL_COLOR}      Channel name"
     echo
     echo -e "${YELLOW_COLOR}OPTIONS${NORMAL_COLOR}
-    ${GREEN_COLOR}-v <string> ${NORMAL_COLOR}        Preview image viewer [default: chafa --size=60%]
-    ${GREEN_COLOR}--no-image ${NORMAL_COLOR}         Disable image preview"
+    ${GREEN_COLOR}-h${NORMAL_COLOR}, ${GREEN_COLOR}--help${NORMAL_COLOR}     Show this help message
+    ${GREEN_COLOR}-v <string>${NORMAL_COLOR}    Preview image viewer [default: chafa --size=60%]
+    ${GREEN_COLOR}--no-image${NORMAL_COLOR}     Disable image preview"
     echo
-}
-
-params() {
-    if [[ -z $1 ]]; then
-        show_help_and_exit
-    fi
-    if [ "$#" -gt 1 ]; then
-        if [[ "$2" == "--no-image" ]]; then
-            SHOW_IMAGE=false
-        elif [[ "$2" == "-v" && -n "$3" ]]; then
-            IMAGE_VIEWER="$3"
-        else
-            show_help_and_exit
-        fi
-    fi
 }
 
 show_help_and_exit() {
@@ -57,6 +42,23 @@ Nothing_to_show() {
     exit 0
 }
 
+params() {
+    if [[ -z $1 ]]; then
+        show_help_and_exit
+    fi
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        show_help_and_exit
+    fi
+    if [ "$#" -gt 1 ]; then
+        if [[ "$2" == "--no-image" ]]; then
+            SHOW_IMAGE=false
+        elif [[ "$2" == "-v" && -n "$3" ]]; then
+            IMAGE_VIEWER="$3"
+        else
+            show_help_and_exit
+        fi
+    fi
+}
 
 load() {
 	if [[ ! -f "$IMG_PATH/$vid" ]]; then
@@ -118,11 +120,3 @@ if [ $empty = true ]; then
 fi
 
 echo -e "$str" | column --table --separator "|" | fzf "${fzf_params[@]}"
-
-
-
-
-
-
-
-

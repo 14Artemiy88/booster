@@ -3,9 +3,17 @@ Get videos from Boosty
 
 ## Usage
 ```bash
-./booster <channel>
-```
+USAGE
+    ./booster CHANNEL [OPTIONS]
 
+ARGS
+    <CHANNEL>      Channel name
+
+OPTIONS
+    -h, --help     Show this help message
+    -v <string>    Preview image viewer [default: chafa --size=60%]
+    --no-image     Disable image preview
+```
 
 ## Requirements
 https://github.com/junegunn/fzf
