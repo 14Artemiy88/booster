@@ -7,6 +7,10 @@ declare -r BLUE_COLOR="\e[1;36m"
 declare -r RED_COLOR="\e[1;31m"
 declare -r GRAY_COLOR="\e[38;5;254m"
 declare -r IMG_PATH="$HOME/.cache/booster"
+declare -A access_arr=(
+    ["true"]="${GREEN_COLOR}󰄬${NORMAL_COLOR}"
+    ["false"]="${RED_COLOR}󰅖${NORMAL_COLOR}"
+)
 
 if [ ! -d "$IMG_PATH" ]; then
 	mkdir "$IMG_PATH"
@@ -66,7 +70,6 @@ load() {
 }
 
 function get_channels() {
-    local -i i=0
     readonly json=$(curl -s https://api.boosty.to/v1/blog/$1/media_album/\?type\=all\&limit_by\=media | jq -r '.data.mediaPosts[] | [.post.title, .media[0]?.vid, .post.hasAccess, .media[0]?.preview, .post.teaser[0].url] | @tsv')
     if [[ $json == "" ]]; then
         Nothing_to_show
@@ -74,18 +77,13 @@ function get_channels() {
 
     while IFS=$'\t' read -r title vid hasAccess preview _; do
     	if [[ "$vid" != false && "$vid" != true ]]; then
-    		access="${RED_COLOR}󰅖${NORMAL_COLOR}"
-    		if [ "$hasAccess" = true ]; then
-    			access="${GREEN_COLOR}󰄬${NORMAL_COLOR}"
-    		fi
-    		str="$str\n $access|${BLUE_COLOR}$title${NORMAL_COLOR}"
+            empty=false
+    		access=${access_arr["$hasAccess"]}
             if [ $SHOW_IMAGE = true ]; then
     		    load "$preview" "$title"
             fi
-            str="$str|${GRAY_COLOR}$vid${NORMAL_COLOR}"
-            empty=false
+    		str="$str\n $access|${BLUE_COLOR}$title${NORMAL_COLOR}|${GRAY_COLOR}$vid${NORMAL_COLOR}"
     	fi
-    	((i++))
     done  <<< "$json"
 }
 
